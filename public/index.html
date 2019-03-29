@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        #container{
+            display: flex;
+            flex-direction: column;
+            border: 1px solid grey;
+            height: 350px;
+            width: 300px;
+        }
+        #sender{
+            height: 10%;
+        }
+        #msg{
+            height: 10%;
+        }
+        #div{
+            height: 80%;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <pre id="div"></pre>
+        <input id="sender" value="김기현"/>
+        <input id="msg"/>
+        <button id="btn">submit</button>
+    </div>
+    <script src="index.js"></script>
+</body>
+</html>
