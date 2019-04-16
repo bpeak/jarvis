@@ -15,7 +15,7 @@ window.addEventListener('keypress', (e) => {
 
 
         const room = document.getElementById('room').value
-
+        document.getElementById('msg').value = ""
         send(msg, sender, room)
         .then(response => response.text())
         .then(html => {

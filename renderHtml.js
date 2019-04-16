@@ -1,5 +1,4 @@
 const renderHTML = (res, data) => {
-    // res.render('response', data)
     if(data === null){
         data = {
             isHaveResponse : false,

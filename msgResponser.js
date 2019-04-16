@@ -39,11 +39,11 @@ const msgResponser = async (msg, room_id, user) => {
             return ({
                 isHaveResponse : true,
                 response : `
-    [ SYSTEM - ON ]
+[ SYSTEM - ON ]
     
-    부르셨나요
-    ( 명령어를 모르시면 도움말 이라고 입력해주세요. )
-    `
+부르셨나요
+( 명령어를 모르시면 도움말 이라고 입력해주세요. )
+`
             })
         }
         

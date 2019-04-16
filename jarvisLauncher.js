@@ -1,7 +1,37 @@
-const getchatRank = require('./getchatRank')
-const getLuck = require('./getLuck')
+const api = require('./api/index')
+const dao = require('./db/dao')
 
-const dao = require('./dao')
+const axios = require('axios')
+const getLuck = async (dateOfBirth) => {
+    const response = await axios.get(`https://m.search.naver.com/p/csearch/dcontent/external_api/json_todayunse_v2.naver?_callback=window.__jindo2_callback._fortune_my_0&gender=m&birth=${dateOfBirth}&solarCal=solar&time=7`)
+    //text parsing to jsObject
+    let { data } = response
+    let str = data
+    str = str.replace('window.__jindo2_callback._fortune_my_0(', "")
+    str = str.replace(');', "")
+    const json = JSON.stringify(eval("(" + str + ")"));
+    const result = JSON.parse(json).result.day
+    const { title, date, content } = result
+
+    //manufacture
+    const luck = content.reduce((luck, value, index) => {
+        if(index === 0){
+            luck.keyword = value.keyword
+        }
+        if(index === content.length - 1){
+            return luck
+        }
+        luck.contents[value.name] = {
+            desc : value.desc,
+        }
+        return luck
+    }, {
+        keyword : null,
+        contents : {}
+    })
+    console.log(luck)
+    return luck
+}
 
 const jarvisLauncher = () => {
     const config = {
@@ -66,22 +96,6 @@ const jarvisLauncher = () => {
                     response : "< 원하시는 처리를 말씀해주세요 >"
                 })
             },
-//             '돈계산' : () => {
-//                 store.updateState({
-//                     ...store.getState(),
-//                     currentDepth : store.getState().currentDepth + 1,
-//                     currentSubject : '돈계산',
-//                 })                
-//                 return ({
-//                     isHaveResponse : true,
-//                     response : 
-// `
-// 돈빌려주기
-// 돈갚기
-// 채무내역
-// `
-//                 })
-//             },
             '채팅순위' : async (msg, user, room_id) => {
                 const rows = await dao.getChatRankByRoom(room_id)
                 let response = "채팅순위\n"
@@ -91,6 +105,99 @@ const jarvisLauncher = () => {
                 return ({
                     isHaveResponse : true,
                     response,
+                })
+            },
+            '실시간검색어' : async () => {
+                const responseMsg = await api.getRealTimeSearchRank()
+                return ({
+                    isHaveResponse : true,
+                    response : responseMsg,
+                })
+            },
+            '날씨' : async () => {
+                store.updateState({
+                    ...store.getState(),
+                    isListening : true,
+                    listenEvent : async (msg, user) => {
+                        const responseMsg = await api.getWeather(msg)
+                        store.updateState({
+                            ...store.getState(),
+                            isListening : false,
+                            listenEvent : false,
+                        })
+                        return ({
+                            isHaveResponse : true,
+                            response : responseMsg,
+                        })
+                    }
+                })
+                return ({
+                    isHaveResponse : true,
+                    response : 
+`
+지역을 입력해주세요
+ex) 주안
+ex) 평내
+ex) 남양주
+ex) 구의동 
+`
+                })                
+            },
+            '운세' : async () => {
+                store.updateState({
+                    ...store.getState(),
+                    isListening : true,
+                    listenEvent : async (msg, user) => {
+                        let isAllNumber = true
+                        for(let i = 0; i < msg.length; i++){
+                            if(Number(msg[i]) === NaN){
+                                isAllNumber = false
+                                break;
+                            }
+                        }
+                        if(!isAllNumber && msg.length !== 8){
+                            return ({
+                                isHaveResponse : true,
+                                response : "잘못된 입력입니다. EX) 19940402"
+                            })
+                        }
+                        const luck = await getLuck(msg)
+                        store.updateState({
+                            ...store.getState(),
+                            data : luck,
+                            listenEvent : (msg, user) => {
+                                let response = luck.keyword + "\n\n"
+                                response += ":: " + user.name + "님의 " + msg + " ::" + "\n\n"
+                                response += luck.contents[msg].desc
+                                store.updateState({
+                                    ...store.getState(),
+                                    isListening : false,
+                                    listenEvent : false,
+                                })
+                                return ({
+                                    isHaveResponse : true,
+                                    response,
+                                })
+                            }
+                        })
+                        let responseMsg = "<원하시는 항목을 정확히 입력해주세요>\n\n"
+                        Object.keys(luck.contents).forEach((v) => {
+                            responseMsg += v + "\n"
+                        })
+                        return ({
+                            isHaveResponse : true,
+                            response : responseMsg,
+                        })
+                    }
+                })                
+                return ({
+                    isHaveResponse : true,
+                    response : 
+`
+생년월일을 입력해주세요
+EX)
+19930402
+`
                 })
             },
             '오늘의운세' : async () => {
@@ -111,7 +218,7 @@ const jarvisLauncher = () => {
                                 response : "잘못된 입력입니다. EX) 19940402"
                             })
                         }
-                        const luck = await getLuck(msg)
+                        const luck = await api.getLuck(msg)
                         let response = user.name + "님의 " + luck.name + "\n\n"
                         response += luck.keyword + "\n\n"
                         response += luck.desc
@@ -142,8 +249,10 @@ EX)
                     response :
 `
 < 원하시는 처리를 말씀해주세요 >
-채팅순위
 오늘의운세
+날씨
+실시간검색어
+채팅순위
 리셋
 종료
 `                                        
