@@ -143,7 +143,29 @@ ex) 구의동
 `
                 })                
             },
-            '운세' : async () => {
+            '위키검색' : () => {
+                store.updateState({
+                    ...store.getState(),
+                    isListening : true,
+                    listenEvent : async (msg, user) => {
+                        const responseMsg = await api.getNamuWiki(msg)
+                        store.updateState({
+                            ...store.getState(),
+                            isListening : false,
+                            listenEvent : false,
+                        })
+                        return ({
+                            isHaveResponse : true,
+                            response : responseMsg,
+                        })
+                    }
+                })
+                return ({
+                    isHaveResponse : true,
+                    response : "검색어를 입력해주세요.",
+                })
+            },
+            '운세2' : async () => {
                 store.updateState({
                     ...store.getState(),
                     isListening : true,
@@ -249,9 +271,10 @@ EX)
                     response :
 `
 < 원하시는 처리를 말씀해주세요 >
-오늘의운세
 날씨
 실시간검색어
+운세2
+오늘의운세
 채팅순위
 리셋
 종료

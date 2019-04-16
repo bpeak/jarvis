@@ -26,6 +26,7 @@ window.addEventListener('keypress', (e) => {
             var end = parse2.substr(index, parse2.length - 1)
             if(front.trim() === "true"){
                 const responseDiv = document.createElement('div')
+                console.log(end)
                 responseDiv.innerHTML = end.trim()
                 div.appendChild(responseDiv)
                 div.scrollTop = div.scrollHeight           
