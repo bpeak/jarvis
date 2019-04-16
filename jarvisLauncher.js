@@ -29,7 +29,6 @@ const getLuck = async (dateOfBirth) => {
         keyword : null,
         contents : {}
     })
-    console.log(luck)
     return luck
 }
 
