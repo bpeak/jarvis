@@ -147,7 +147,8 @@ ex) 구의동
                     ...store.getState(),
                     isListening : true,
                     listenEvent : async (msg, user) => {
-                        const responseMsg = await api.getNamuWiki(msg)
+                        let responseMsg = "검색결과를 받아왔습니다 ↓↓↓" + "\u200b".repeat(550)
+                        responseMsg += await api.getNamuWiki(msg)
                         store.updateState({
                             ...store.getState(),
                             isListening : false,
