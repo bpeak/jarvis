@@ -1,11 +1,15 @@
-const getChatRank = require('./getChatRank')
+const getchatRank = require('./getchatRank')
 const getLuck = require('./getLuck')
+
+const dao = require('./dao')
 
 const jarvisLauncher = () => {
     const config = {
         timeoutMS : 1000 * 30
     }
     
+    let timer = null
+
     const defaultState = {
         isUsing : false,
         owner : null,
@@ -18,11 +22,15 @@ const jarvisLauncher = () => {
         const getState = () => Object.assign({} , state)
         const initState = () => { state = {...defaultState} }
         const updateState = (newState) => { state = {...newState} }
+        const setTimer = (func) => { timer = func }
+        const clearTimer = () => { clearTimeout(timer) }
 
         return ({
             getState,
             initState,
             updateState,
+            setTimer,
+            clearTimer,
         })
     })()
 
@@ -74,8 +82,8 @@ const jarvisLauncher = () => {
 // `
 //                 })
 //             },
-            '채팅순위' : async () => {
-                const rows = await getChatRank()
+            '채팅순위' : async (msg, user, room_id) => {
+                const rows = await dao.getChatRankByRoom(room_id)
                 let response = "채팅순위\n"
                 for(let i = 0; i < rows.length; i++){
                     response += `${i + 1}위 ${rows[i].name}   ${rows[i].count}회\n`
@@ -89,7 +97,7 @@ const jarvisLauncher = () => {
                 store.updateState({
                     ...store.getState(),
                     isListening : true,
-                    listenEvent : async (msg, sender) => {
+                    listenEvent : async (msg, user) => {
                         let isAllNumber = true
                         for(let i = 0; i < msg.length; i++){
                             if(Number(msg[i]) === NaN){
@@ -104,9 +112,14 @@ const jarvisLauncher = () => {
                             })
                         }
                         const luck = await getLuck(msg)
-                        let response = sender + "님의 " + luck.name + "\n\n"
+                        let response = user.name + "님의 " + luck.name + "\n\n"
                         response += luck.keyword + "\n\n"
                         response += luck.desc
+                        store.updateState({
+                            ...store.getState(),
+                            isListening : false,
+                            listenEvent : false,
+                        })
                         return ({
                             isHaveResponse : true,
                             response,
@@ -260,23 +273,20 @@ EX)
         //depth 2
     ]
 
-    const commandExcuter = async (msg, sender) => {
+    const commandExcuter = async (msg, user, room_id) => {
         if(msg === '리셋'){ return await jarvisCommands[0]['리셋']() }
-        if(msg === '프리' && sender === '김기현'){ return await jarvisCommands[0]['프리']() }
+        if(msg === '프리' && user.name === '김기현'){ return await jarvisCommands[0]['프리']() }
         if(store.getState().isListening){
-            return await store.getState().listenEvent(msg, sender)
+            return await store.getState().listenEvent(msg, user)
         }
         const { currentDepth, currentSubject } = store.getState()
         let cmdFunc
         if(currentDepth === 0){
             cmdFunc = jarvisCommands[currentDepth][msg] || notFoundCmd
         } else {
-            console.log("여기드가야지")
-            console.log(currentDepth, currentSubject, msg)
             cmdFunc = jarvisCommands[currentDepth][currentSubject][msg] || notFoundCmd
-            console.log(cmdFunc)
         }
-        const aa = await cmdFunc(msg)
+        const aa = await cmdFunc(msg, user, room_id)
         return aa
     }    
 

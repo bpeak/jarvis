@@ -1,5 +1,5 @@
-const send = (msg, sender) => {
-    return fetch(`http://localhost?msg=${msg}&sender=${sender}`)
+const send = (msg, sender, room) => {
+    return fetch(`http://localhost:4000?msg=${msg}&sender=${sender}&room=${room}`)
 }
 
 window.addEventListener('keypress', (e) => {
@@ -13,8 +13,10 @@ window.addEventListener('keypress', (e) => {
         myDiv.innerHTML = `${sender} : ${msg}`
         div.appendChild(myDiv)
 
-    
-        send(msg, sender)
+
+        const room = document.getElementById('room').value
+
+        send(msg, sender, room)
         .then(response => response.text())
         .then(html => {
             var parse1 = html.slice(html.indexOf("<pre>"), html.length)

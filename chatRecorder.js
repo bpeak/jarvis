@@ -1,6 +1,6 @@
 const db = require('./db')
 
-const chatRecorder = async(msg, sender) => {
+const chatsRecorder = async(msg, sender) => {
     try{
         const rows = await db.query("select * from users where name = ?", [sender])
         let user_id
@@ -11,10 +11,10 @@ const chatRecorder = async(msg, sender) => {
             user_id = rows[0].id
         }
     
-        await db.query("insert into chatcounts(user_id) values(?)", [user_id])    
+        await db.query("insert into chats(user_id, description) values(?, ?)", [user_id, msg])    
     } catch (err) {
         console.log(err)
     }
 }
 
-module.exports = chatRecorder
+module.exports = chatsRecorder
